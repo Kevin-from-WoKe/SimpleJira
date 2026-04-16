@@ -430,11 +430,12 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
             />
           </div>
         </div>
-        <Tooltip text={`${session.user.displayName} — click to log out`}>
+        <Tooltip text="Click to log out">
         <button
           onClick={onLogout}
-          className="rounded-full p-0.5 hover:ring-2 hover:ring-border transition-all"
+          className="flex items-center gap-2 rounded-full pl-2 pr-1 py-0.5 hover:bg-muted transition-all"
         >
+          <span className="text-sm text-muted-foreground">{session.user.displayName}</span>
           {avatar
             ? <img src={avatar} alt={session.user.displayName} className="h-8 w-8 rounded-full" />
             : <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">{session.user.displayName?.[0] ?? "?"}</div>
