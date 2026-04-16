@@ -2,9 +2,16 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+
+@keyframes orange-blink {
+  0% { background-color: rgba(251, 146, 60, 0.15); }
+  100% { background-color: transparent; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    --spacing: var(--spacing-base, 0.25rem);
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
     --color-sidebar-ring: var(--sidebar-ring);
