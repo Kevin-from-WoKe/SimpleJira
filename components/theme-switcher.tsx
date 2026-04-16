@@ -90,7 +90,7 @@ const SPACING_OPTIONS = [
   { label: "Spacious", value: "0.35rem" },
 ] as const
 
-function pick<T>(arr: T[]): T {
+function pick<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
