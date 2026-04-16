@@ -31,6 +31,9 @@ pnpm-debug.log*
 # env files
 .env*.local
 
+# netlify
+.netlify/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
