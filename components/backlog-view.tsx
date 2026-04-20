@@ -45,6 +45,8 @@ type Priority = { name: string }
 type Project = { id: string; key: string; name: string }
 
 type Reporter = { displayName: string; avatarUrls: Record<string, string> } | null
+type JiraUser = { accountId?: string; displayName: string; avatarUrls?: Record<string, string> } | null
+type JiraOption = { value?: string; name?: string } | null
 
 type Attachment = {
   id: string
@@ -75,6 +77,25 @@ type Issue = {
     created?: string
     updated?: string
     attachment?: Attachment[]
+    // Dev team
+    customfield_10319?: JiraUser  // Backend Developer
+    customfield_10320?: JiraUser  // Frontend Developer
+    customfield_10534?: JiraUser  // Mobile Developer
+    customfield_10316?: number | null  // Front Story Point
+    customfield_10315?: number | null  // Backend Story Point
+    customfield_10535?: number | null  // Mobile Story Point
+    // QA team
+    customfield_10325?: JiraUser  // Responsible QA
+    customfield_10331?: JiraUser  // DEV QA
+    customfield_10332?: JiraUser  // STAGE QA
+    customfield_10335?: JiraUser  // Chicago QA
+    customfield_10326?: number | null  // Estimated QA Point
+    customfield_10328?: number | null  // Chicago Estimated QA Point
+    customfield_10334?: JiraUser  // Reopen By
+    customfield_10333?: JiraOption  // Reopen Reason
+    customfield_10484?: JiraOption  // Issue Level
+    customfield_10485?: JiraOption  // Issue Category
+    customfield_10486?: JiraOption  // Issue Source
   }
 }
 
@@ -992,30 +1013,50 @@ function StoryField({ label, value, attachments }: { label: string; value?: unkn
   )
 }
 
-function FigmaEmbed({ url, hasDesigns, jiraUrl }: { url?: string | null; hasDesigns?: boolean; jiraUrl?: string }) {
-  if (url) {
-    const embedUrl = `https://www.figma.com/embed?embed_host=figma-jira-add-on&url=${encodeURIComponent(url)}`
-    return <iframe src={embedUrl} className="w-full h-full border-0" allowFullScreen />
+function FigmaLogo({ muted = false, className = "w-3.5 h-5" }: { muted?: boolean; className?: string }) {
+  if (muted) {
+    return (
+      <svg viewBox="0 0 38 57" className={`${className} opacity-30`} fill="currentColor" aria-hidden>
+        <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0Z" />
+        <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 0 1-19 0Z" />
+        <path d="M19 0v19h9.5a9.5 9.5 0 0 0 0-19H19Z" />
+        <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5Z" />
+        <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5Z" />
+      </svg>
+    )
   }
+  return (
+    <svg viewBox="0 0 38 57" className={className} fill="none" aria-hidden>
+      <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0Z" fill="#1ABCFE"/>
+      <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 0 1-19 0Z" fill="#0ACF83"/>
+      <path d="M19 0v19h9.5a9.5 9.5 0 0 0 0-19H19Z" fill="#FF7262"/>
+      <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5Z" fill="#F24E1E"/>
+      <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5Z" fill="#A259FF"/>
+    </svg>
+  )
+}
 
+function FigmaEmbed({ hasDesigns, jiraUrl, loading }: { url?: string | null; hasDesigns?: boolean; jiraUrl?: string; loading?: boolean }) {
+  if (loading) {
+    return (
+      <div className="h-9 flex items-center gap-2.5 px-3">
+        <div className="w-3.5 h-5 rounded-sm bg-muted animate-pulse" />
+        <div className="h-2.5 w-28 rounded-full bg-muted animate-pulse" />
+      </div>
+    )
+  }
   if (hasDesigns && jiraUrl) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-        <svg viewBox="0 0 38 57" className="w-7 h-7 opacity-20" fill="none">
-          <path d="M19 28.5a9.5 9.5 0 1 1 19 0 9.5 9.5 0 0 1-19 0Z" fill="#1ABCFE"/>
-          <path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 0 1-19 0Z" fill="#0ACF83"/>
-          <path d="M19 0v19h9.5a9.5 9.5 0 0 0 0-19H19Z" fill="#FF7262"/>
-          <path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5Z" fill="#F24E1E"/>
-          <path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5Z" fill="#A259FF"/>
-        </svg>
-        <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
-          Design linked in Jira.<br />Preview unavailable here.
-        </p>
+      <div className="h-9 flex items-center justify-between gap-3 px-3 min-w-0">
+        <span className="flex items-center gap-2 min-w-0">
+          <FigmaLogo />
+          <span className="text-xs text-foreground truncate">Figma UI available</span>
+        </span>
         <a
-          href={jiraUrl}
+          href={jiraUrl ?? "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border/60 bg-muted/40 hover:bg-muted/70 transition-colors text-[11px] text-muted-foreground hover:text-foreground"
+          className="flex items-center gap-1 px-2 py-1 rounded text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
         >
           <ExternalLink className="w-3 h-3" />
           View in Jira
@@ -1025,8 +1066,139 @@ function FigmaEmbed({ url, hasDesigns, jiraUrl }: { url?: string | null; hasDesi
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <span className="text-[11px] text-muted-foreground/50">No UI provided.</span>
+    <div className="h-9 flex items-center gap-2 px-3 min-w-0">
+      <FigmaLogo muted className="w-3.5 h-5 text-muted-foreground" />
+      <span className="text-xs text-muted-foreground/60 truncate">No UI provided.</span>
+    </div>
+  )
+}
+
+// ── Team panel (Bento #4) ────────────────────────────────────────────────────
+function UserAvatar({ user, size = 16 }: { user: JiraUser; size?: number }) {
+  if (!user) return null
+  const url = user.avatarUrls?.["24x24"] ?? user.avatarUrls?.["32x32"]
+  if (url) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={url} alt={user.displayName} className="rounded-full flex-shrink-0" style={{ width: size, height: size }} />
+  }
+  const initial = user.displayName?.[0]?.toUpperCase() ?? "?"
+  return (
+    <span
+      className="inline-flex items-center justify-center rounded-full bg-muted text-[9px] text-muted-foreground flex-shrink-0"
+      style={{ width: size, height: size }}
+    >
+      {initial}
+    </span>
+  )
+}
+
+function optionLabel(o: JiraOption): string | null {
+  if (!o) return null
+  return o.value ?? o.name ?? null
+}
+
+function TeamRow({ label, user, sp }: { label: string; user?: JiraUser; sp?: number | null }) {
+  return (
+    <div className="grid grid-cols-[68px_1fr_28px] items-center gap-2 px-2 py-1 rounded hover:bg-muted/40 min-w-0">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">{label}</span>
+      {user ? (
+        <span className="flex items-center gap-1.5 min-w-0">
+          <UserAvatar user={user} size={16} />
+          <span className="text-xs truncate">{user.displayName}</span>
+        </span>
+      ) : (
+        <span className="text-xs text-muted-foreground/40">—</span>
+      )}
+      <span className="text-[11px] tabular-nums text-right text-muted-foreground">
+        {sp == null ? <span className="text-muted-foreground/30">—</span> : sp}
+      </span>
+    </div>
+  )
+}
+
+function MetaRow({ label, value, user }: { label: string; value?: string | null; user?: JiraUser }) {
+  return (
+    <div className="grid grid-cols-[110px_1fr] items-center gap-2 px-2 py-1 min-w-0">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">{label}</span>
+      {user ? (
+        <span className="flex items-center gap-1.5 min-w-0">
+          <UserAvatar user={user} size={14} />
+          <span className="text-xs truncate">{user.displayName}</span>
+        </span>
+      ) : value ? (
+        <span className="text-xs truncate">{value}</span>
+      ) : (
+        <span className="text-xs text-muted-foreground/40">—</span>
+      )}
+    </div>
+  )
+}
+
+function SectionHeader({ title, total }: { title: string; total?: number | null }) {
+  return (
+    <div className="flex items-baseline justify-between px-2 pt-2 pb-1 border-b border-border/40">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
+      {total != null && (
+        <span className="text-[10px] text-muted-foreground tabular-nums">
+          <span className="opacity-60">SP </span>{total}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function TeamPanel({ issue }: { issue: Issue }) {
+  const f = issue.fields
+
+  const devSp = [f.customfield_10315, f.customfield_10316, f.customfield_10535]
+    .filter((v): v is number => typeof v === "number")
+    .reduce((a, b) => a + b, 0)
+  const devTotal = devSp || null
+
+  const reopenBy = f.customfield_10334 ?? null
+  const reopenReason = optionLabel(f.customfield_10333 ?? null)
+  const issueLevel = optionLabel(f.customfield_10484 ?? null)
+  const issueCategory = optionLabel(f.customfield_10485 ?? null)
+  const issueSource = optionLabel(f.customfield_10486 ?? null)
+  const hasMeta = reopenBy || reopenReason || issueLevel || issueCategory || issueSource
+
+  return (
+    <div className="h-full overflow-auto py-2 flex flex-col">
+      {/* Dev */}
+      <SectionHeader title="Dev Team" total={devTotal} />
+      <div className="flex flex-col py-1">
+        <TeamRow label="Backend"  user={f.customfield_10319 ?? null} sp={f.customfield_10315} />
+        <TeamRow label="Frontend" user={f.customfield_10320 ?? null} sp={f.customfield_10316} />
+        <TeamRow label="Mobile"   user={f.customfield_10534 ?? null} sp={f.customfield_10535} />
+      </div>
+
+      {/* KL QA */}
+      <SectionHeader title="KL QA" total={f.customfield_10326 ?? null} />
+      <div className="flex flex-col py-1">
+        <TeamRow label="Responsible" user={f.customfield_10325 ?? null} />
+        <TeamRow label="DEV"         user={f.customfield_10331 ?? null} />
+        <TeamRow label="STAGE"       user={f.customfield_10332 ?? null} />
+      </div>
+
+      {/* Chicago QA */}
+      <SectionHeader title="Chicago QA" total={f.customfield_10328 ?? null} />
+      <div className="flex flex-col py-1">
+        <TeamRow label="Chicago QA" user={f.customfield_10335 ?? null} />
+      </div>
+
+      {/* Reopen + Categorization */}
+      {hasMeta && (
+        <>
+          <SectionHeader title="Reopen & Categorization" />
+          <div className="flex flex-col py-1">
+            <MetaRow label="Reopen By"      user={reopenBy} />
+            <MetaRow label="Reopen Reason"  value={reopenReason} />
+            <MetaRow label="Issue Level"    value={issueLevel} />
+            <MetaRow label="Issue Category" value={issueCategory} />
+            <MetaRow label="Issue Source"   value={issueSource} />
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -1143,6 +1315,7 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
   const [figmaUrl, setFigmaUrl] = useState<string | null>(null)
   const [figmaHasDesigns, setFigmaHasDesigns] = useState(false)
+  const [figmaLoading, setFigmaLoading] = useState(false)
   const [rightTab, setRightTab] = useState<1 | 2>(1)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -1163,7 +1336,8 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
 
   // Fetch Figma design URL from issue properties when a ticket is selected
   useEffect(() => {
-    if (!selectedIssue) { setFigmaUrl(null); setFigmaHasDesigns(false); return }
+    if (!selectedIssue) { setFigmaUrl(null); setFigmaHasDesigns(false); setFigmaLoading(false); return }
+    setFigmaLoading(true)
     const creds = { domain: session.domain, email: session.email, apiKey: session.apiKey }
     let cancelled = false
 
@@ -1217,6 +1391,7 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
       if (!cancelled) {
         setFigmaUrl(url)
         setFigmaHasDesigns(hasDesigns)
+        setFigmaLoading(false)
       }
     })
 
@@ -1362,7 +1537,7 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
 
       const fetchIssues = async (sprint: Sprint) => {
         const data = await jiraFetch(creds, `/rest/agile/1.0/sprint/${sprint.id}/issue`, {
-          fields: "summary,status,assignee,issuetype,priority,parent,customfield_10014,description,reporter,labels,customfield_10289,customfield_10293,customfield_10290,customfield_10295,customfield_10024,created,updated,attachment",
+          fields: "summary,status,assignee,issuetype,priority,parent,customfield_10014,description,reporter,labels,customfield_10289,customfield_10293,customfield_10290,customfield_10295,customfield_10024,created,updated,attachment,customfield_10319,customfield_10320,customfield_10534,customfield_10316,customfield_10315,customfield_10535,customfield_10325,customfield_10331,customfield_10332,customfield_10335,customfield_10326,customfield_10328,customfield_10334,customfield_10333,customfield_10484,customfield_10485,customfield_10486",
           maxResults: "100",
         })
         const issues = (data.issues ?? [] as Issue[]).filter((i: Issue) => i.key.startsWith(selectedProject.key + "-"))
@@ -1393,7 +1568,7 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
       setLoadingExtra(true)
       try {
         const data = await jiraFetch(creds, `/rest/agile/1.0/board/${boardId}/backlog`, {
-          fields: "summary,status,assignee,issuetype,priority,parent,customfield_10014,description,reporter,labels,customfield_10289,customfield_10293,customfield_10290,customfield_10295,customfield_10024,created,updated,attachment",
+          fields: "summary,status,assignee,issuetype,priority,parent,customfield_10014,description,reporter,labels,customfield_10289,customfield_10293,customfield_10290,customfield_10295,customfield_10024,created,updated,attachment,customfield_10319,customfield_10320,customfield_10534,customfield_10316,customfield_10315,customfield_10535,customfield_10325,customfield_10331,customfield_10332,customfield_10335,customfield_10326,customfield_10328,customfield_10334,customfield_10333,customfield_10484,customfield_10485,customfield_10486",
           maxResults: "300",
         })
         const issues = (data.issues ?? [] as Issue[]).filter((i: Issue) => i.key.startsWith(selectedProject.key + "-"))
@@ -1630,12 +1805,12 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
 
                   {rightTab === 1 ? (
                     <div className="flex-1 min-h-0 flex flex-col gap-3">
-                      {/* Bento Area #2 — Figma embed, 4:3 */}
-                      <div className="aspect-[4/3] border border-border/80 bg-card overflow-hidden flex-shrink-0" style={{ borderRadius: "calc(var(--radius) * 0.8)" }}>
+                      {/* Bento Area #2 — Figma status (compact single row) */}
+                      <div className="border border-border/80 bg-card overflow-hidden flex-shrink-0" style={{ borderRadius: "calc(var(--radius) * 0.8)" }}>
                         <FigmaEmbed
-                          url={figmaUrl}
                           hasDesigns={figmaHasDesigns}
                           jiraUrl={`https://${session.domain}.atlassian.net/browse/${selectedIssue.key}`}
+                          loading={figmaLoading}
                         />
                       </div>
 
@@ -1643,8 +1818,10 @@ export function BacklogView({ session, onLogout }: { session: Session; onLogout:
                       <div className="flex-1 border border-border/80 bg-card" style={{ borderRadius: "calc(var(--radius) * 0.8)" }} />
                     </div>
                   ) : (
-                    /* Bento Area #4 — full height */
-                    <div className="flex-1 border border-border/80 bg-card" style={{ borderRadius: "calc(var(--radius) * 0.8)" }} />
+                    /* Bento Area #4 — Team info */
+                    <div className="flex-1 min-h-0 border border-border/80 bg-card overflow-hidden" style={{ borderRadius: "calc(var(--radius) * 0.8)" }}>
+                      <TeamPanel issue={selectedIssue} />
+                    </div>
                   )}
                 </div>
               </div>
